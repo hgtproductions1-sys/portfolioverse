@@ -87,6 +87,26 @@ test('JSON backups restore content and theme', async ({ page }) => {
   await expect(page.locator('.app')).toHaveClass(/theme-forest/);
 });
 
+test('template choices and improvement actions change the portfolio output', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore a sample', exact: true }).click();
+  await page.getByRole('radio', { name: /Editorial/ }).click();
+  await page.getByRole('button', { name: 'Make it warmer' }).click();
+  await expect(page.getByRole('status')).toContainText(/warmer voice/);
+  await page.getByRole('button', { name: 'View portfolio', exact: true }).click();
+  await expect(page.locator('.template-editorial')).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export website', exact: true }).click();
+  const file = await download;
+  const stream = await file.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const html = Buffer.concat(chunks).toString('utf8');
+  expect(html).toContain('data-template="editorial"');
+  expect(html).toContain('data-template="editorial"');
+  expect(html).toContain('.projects{grid-template-columns:1fr!important}');
+});
+
 test('responsive landing and editor visual captures', async ({ page }, testInfo) => {
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 });

@@ -11,6 +11,11 @@ const themes = [
   { id: 'ocean', name: 'Ocean', color: '#9bdfea', note: 'Cool & considered' },
   { id: 'forest', name: 'Forest', color: '#a8d5a2', note: 'Grounded & natural' },
 ];
+const templates = [
+  { id: 'orbit', name: 'Orbit', note: 'Immersive 3D constellation', color: '#ffad79' },
+  { id: 'editorial', name: 'Editorial', note: 'Quiet, typographic case study', color: '#d6c5ff' },
+  { id: 'studio', name: 'Studio', note: 'Bold, compact project index', color: '#9bdfea' },
+];
 const emptyPortfolio = { name: '', role: '', bio: '', email: '', skills: [], projects: [] };
 
 function normalize(value) {
@@ -31,7 +36,7 @@ function readSaved() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const saved = JSON.parse(raw);
-    return { portfolio: normalize(saved.portfolio), theme: themes.some(item => item.id === saved.theme) ? saved.theme : 'ember', savedAt: saved.savedAt };
+     return { portfolio: normalize(saved.portfolio), theme: themes.some(item => item.id === saved.theme) ? saved.theme : 'ember', template: templates.some(item => item.id === saved.template) ? saved.template : 'orbit', savedAt: saved.savedAt };
   } catch {
     return { restoreError: 'Your saved draft could not be restored. You can import a resume or start with the sample.' };
   }
@@ -93,11 +98,21 @@ function Field({ label, id, multiline, hint, ...props }) {
   return <div className="field"><label htmlFor={id}>{label}</label>{multiline ? <textarea id={id} {...props} /> : <input id={id} {...props} />}{hint && <span className="field-hint">{hint}</span>}</div>;
 }
 
+function PortfolioImprove({ portfolio, template, onTemplate, onImprove }) {
+  const improvements = [
+    ['clear', 'Clarify the story', 'Make the introduction more direct.'],
+    ['warm', 'Make it warmer', 'Add a more personal opening without changing facts.'],
+    ['tighten', 'Tighten projects', 'Clean up project descriptions and remove empty space.'],
+  ];
+  return <section className="improve-section" aria-labelledby="improve-heading"><div className="improve-copy"><span className="section-kicker">Shape the output</span><h3 id="improve-heading">Make the portfolio feel finished.</h3><p>Choose a visual language, then apply a focused improvement. Every change stays editable and local.</p></div><div className="template-choices" role="radiogroup" aria-label="Portfolio template">{templates.map(item => <button type="button" role="radio" aria-checked={template === item.id} className={`template-choice ${template === item.id ? 'is-selected' : ''}`} key={item.id} onClick={() => onTemplate(item.id)}><span className={`template-glyph glyph-${item.id}`} aria-hidden="true"><i /><i /><i /></span><strong>{item.name}</strong><small>{item.note}</small></button>)}</div><div className="improvement-actions"><span>Improve with local rules</span>{improvements.map(([id, label, note]) => <button type="button" className="improve-action" key={id} onClick={() => onImprove(id)}><strong>{label}</strong><small>{note}</small><span>↗</span></button>)}</div></section>;
+}
+
 function App() {
   const [initial] = useState(readSaved);
   const [portfolio, setPortfolio] = useState(initial.portfolio || null);
   const [theme, setTheme] = useState(initial.theme || 'ember');
-  const [savedSnapshot, setSavedSnapshot] = useState(initial.portfolio ? JSON.stringify({ portfolio: initial.portfolio, theme: initial.theme }) : '');
+  const [template, setTemplate] = useState(initial.template || 'orbit');
+  const [savedSnapshot, setSavedSnapshot] = useState(initial.portfolio ? JSON.stringify({ portfolio: initial.portfolio, theme: initial.theme, template: initial.template || 'orbit' }) : '');
   const [savedAt, setSavedAt] = useState(initial.savedAt || null);
   const [sourceText, setSourceText] = useState('');
   const [sourceMode, setSourceMode] = useState('file');
@@ -117,7 +132,7 @@ function App() {
   const importRef = useRef(0);
   const demo = normalize(typeof samplePortfolio === 'function' ? samplePortfolio() : samplePortfolio);
   const displayPortfolio = portfolio || demo;
-  const dirty = Boolean(portfolio && JSON.stringify({ portfolio, theme }) !== savedSnapshot);
+   const dirty = Boolean(portfolio && JSON.stringify({ portfolio, theme, template }) !== savedSnapshot);
 
   useEffect(() => {
     document.title = preview ? `${portfolio?.name || 'Your portfolio'} — PortfolioVerse` : 'PortfolioVerse — Your work, in orbit';
@@ -144,7 +159,8 @@ function App() {
         const backup = JSON.parse(await file.text());
         if (!backup.portfolio || !Array.isArray(backup.portfolio.projects)) throw new Error('This is not a PortfolioVerse backup. Choose the JSON file downloaded from the studio.');
         loadPortfolio(backup.portfolio, 'JSON backup restored. Save draft to keep it in this browser.');
-        if (themes.some(item => item.id === backup.theme)) setTheme(backup.theme);
+         if (themes.some(item => item.id === backup.theme)) setTheme(backup.theme);
+        if (templates.some(item => item.id === backup.template)) setTemplate(backup.template);
         setFilename(file.name); setSourceText('');
         return;
       }
@@ -189,8 +205,8 @@ function App() {
   function save() {
     try {
       const date = new Date().toISOString();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ portfolio, theme, savedAt: date }));
-      setSavedSnapshot(JSON.stringify({ portfolio, theme })); setSavedAt(date);
+       localStorage.setItem(STORAGE_KEY, JSON.stringify({ portfolio, theme, template, savedAt: date }));
+       setSavedSnapshot(JSON.stringify({ portfolio, theme, template })); setSavedAt(date);
       notify('Draft saved on this browser. Your original resume text was not saved.');
     } catch { setError('This browser could not save your draft. Download a JSON backup or export your website instead.'); }
   }
@@ -203,19 +219,25 @@ function App() {
   function refine() {
     try { setPortfolio(normalize(refinePortfolio(portfolio, tone))); notify(`Applied a ${tone} tone using local writing rules. Review the revised copy.`); } catch (err) { setError(err.message || 'The tone could not be updated. Your draft is still available to edit.'); }
   }
+  function improve(kind) {
+    if (kind === 'clear') { setPortfolio(normalize(refinePortfolio(portfolio, 'professional'))); notify('The story was clarified with local writing rules. Review the revised copy.'); return; }
+    if (kind === 'warm') { setPortfolio(normalize(refinePortfolio(portfolio, 'friendly'))); notify('A warmer voice was applied without adding new facts.'); return; }
+    const projects = portfolio.projects.map(project => ({ ...project, description: project.description.trim().replace(/\s+/g, ' ').replace(/\s*([.!?])?$/, (match, punctuation) => punctuation ? match : '.') }));
+    setPortfolio({ ...portfolio, projects }); notify('Project descriptions were tightened without changing their meaning.');
+  }
   function exportSite() {
     try {
       const slug = (portfolio.name || 'my-portfolio').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'my-portfolio';
-      download(exportPortfolio(portfolio, theme), `${slug}.html`, 'text/html;charset=utf-8');
+       download(exportPortfolio(portfolio, theme, template), `${slug}.html`, 'text/html;charset=utf-8');
       notify('Website exported as HTML. Open the downloaded file in your browser to view it.');
     } catch (err) { setError(err.message || 'Export failed. Your draft is still here; please try again.'); }
   }
   function exportJSON() {
-    download(JSON.stringify({ portfolio, theme }, null, 2), 'portfolioverse-draft.json', 'application/json');
+     download(JSON.stringify({ portfolio, theme, template }, null, 2), 'portfolioverse-draft.json', 'application/json');
     notify('JSON backup downloaded.');
   }
 
-  if (preview && portfolio) return <div className={`app preview-page theme-${theme}`} id="top">
+   if (preview && portfolio) return <div className={`app preview-page theme-${theme} template-${template}`} id="top">
     <a className="skip-link" href="#preview-main">Skip to portfolio</a>
     <header className="preview-toolbar"><Brand /><span className="preview-mode-label">Portfolio preview</span><div className="toolbar-actions"><button className="button subtle" onClick={() => { setPreview(false); requestAnimationFrame(() => editorHeading.current?.focus()); }}><Icon name="back" />Back to editor</button><button className="button primary" onClick={exportSite}><Icon name="download" />Export website</button></div></header>
     {error && <div className="notice error" role="alert">{error}</div>}
@@ -233,7 +255,8 @@ function App() {
 
     {!portfolio && <section className="landing-hero" aria-labelledby="hero-heading"><div className="hero-copy"><h1 id="hero-heading">Your work,<br />in orbit.</h1><p className="hero-description">You’re more than a document.<br />Turn your resume into a portfolio with a world of its own.</p><div className="hero-actions"><button className="button primary large" onClick={startBuilder}>Build my portfolio <Icon name="diagonal" /></button><button className="button text-button" onClick={loadSample}>Explore a sample <Icon name="arrow" /></button></div><p className="hero-note"><span className="status-dot" />Local-first. Yours to shape. Free to export.</p></div><div className="hero-world"><div className="world-caption"><span>One person. A world of possibilities.</span><span className="sample-label">Sample universe</span></div><World portfolio={demo} theme={theme} selectedId={selectedId} onSelect={id => setSelectedId(id)} /><div className="hero-project-links" aria-label="Sample projects">{demo.projects.slice(0, 3).map(project => <button key={project.id} aria-pressed={selectedId === project.id} onClick={() => setSelectedId(project.id)}><span className="mini-orb" />{project.title}<Icon name="diagonal" size={13} /></button>)}</div><p className="world-instruction">Drag to orbit · Select a project to explore</p></div></section>}
 
-    <main>
+     <main>
+       {portfolio && <PortfolioImprove portfolio={portfolio} template={template} onTemplate={setTemplate} onImprove={improve} />}
       <section id="builder" ref={builderRef} className={`builder-section ${portfolio ? 'has-draft' : ''}`} aria-labelledby="builder-heading" aria-busy={busy}>
         <div className="studio-heading"><div><h2 id="builder-heading" tabIndex="-1" ref={editorHeading}>{portfolio ? 'Your portfolio studio.' : 'A new world starts here.'}</h2><p>{portfolio ? 'Shape the story. Make the space your own.' : 'Bring your experience. We’ll give you a starting point.'}</p></div><span className="local-indicator"><span className="status-dot" />Local extraction · no AI service connected</span></div>
         <div className="feedback-area">{error && <div className="notice error" role="alert"><span>{error}</span><button className="icon-button" onClick={() => setError('')} aria-label="Dismiss error"><Icon name="close" size={16} /></button></div>}<div className={`notice status ${message ? '' : 'notice-empty'}`} role="status" aria-live="polite">{message && <><Icon name={busy ? 'file' : 'check'} size={16} /><span>{message}</span></>}</div></div>

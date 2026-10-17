@@ -81,6 +81,7 @@ test('standalone export includes real content and safely encoded usable links', 
   assert.ok(html.includes('href="mailto:alex@example.com"'));
   assert.ok(html.includes('href="#project-1"'));
   assert.ok(html.includes('id="project-1"'));
+  assert.ok(html.includes('Portfolio snapshot'));
   assert.ok(html.includes('--bg:#081e20'));
   assert.doesNotThrow(() => exportPortfolio(null));
 });
