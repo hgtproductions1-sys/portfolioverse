@@ -91,3 +91,29 @@ Files remain in memory on the device. Only **Save draft** writes the edited draf
 Validated on the development machine: offline unit tests, real Edge browser integration tests, production build. Docker is not installed on the development machine, so neither Linux image has been run here. Hosted publishing, authentication, cloud storage and LLM generation are not implemented. Export provides a working deployment artifact, not automatic hosting.
 
 See `workflows/resume-to-portfolio.md` for the implemented workflow and acceptance criteria.
+
+## Demo film
+
+The website includes the narrated, subtitled product demo at `/portfolioverse-demo.mp4`. The source Remotion project is kept separately in the workspace at `../portfolioverse-demo-video`; the deployable website only needs the committed MP4 under `public/`.
+
+## Exact clean-machine commands
+
+```sh
+git clone https://github.com/hgtproductions1-sys/portfolioverse.git
+cd portfolioverse
+nvm install 24.20.0
+nvm use 24.20.0
+npm ci
+npm test
+npm run build
+npm run dev -- --host 0.0.0.0
+```
+
+Open the Vite URL printed by the last command. For the production container:
+
+```sh
+docker build -t portfolioverse .
+docker run --rm -p 8080:80 portfolioverse
+```
+
+Then open `http://localhost:8080`. The committed `package-lock.json`, `.nvmrc`, `Dockerfile`, `.env.example`, and `Makefile` make the install, runtime, container, configuration, and test entry points reproducible without machine-specific paths or secrets.

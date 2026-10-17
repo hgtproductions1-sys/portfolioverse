@@ -119,3 +119,13 @@ test('responsive landing and editor visual captures', async ({ page }, testInfo)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   }
 });
+
+test('demo film is shipped with the website', async ({ page }) => {
+  await page.goto('/');
+  const video = page.locator('video[aria-label="PortfolioVerse product demo video"]');
+  await expect(video).toBeVisible();
+  await expect(video.locator('source')).toHaveAttribute('src', '/portfolioverse-demo.mp4');
+  const response = await page.request.get('/portfolioverse-demo.mp4');
+  expect(response.ok()).toBe(true);
+  expect(response.headers()['content-type']).toContain('video/mp4');
+});
