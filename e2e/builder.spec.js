@@ -27,6 +27,15 @@ test('resume to editable preview, saved draft and offline HTML export', async ({
   await page.getByRole('button', { name: 'Export website', exact: true }).click();
   const download = await downloaded;
   expect(download.suggestedFilename()).toBe('jamie-studio.html');
+  const stream = await download.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const exported = await page.context().newPage();
+  await exported.route('**/*', route => route.abort());
+  await exported.setContent(Buffer.concat(chunks).toString('utf8'));
+  await expect(exported.getByRole('heading', { name: 'Jamie Studio', exact: true })).toBeVisible();
+  await expect(exported.getByRole('heading', { name: 'Paper Trail', exact: true })).toBeVisible();
+  await exported.close();
   expect(errors).toEqual([]);
 });
 
@@ -69,4 +78,24 @@ test('mobile builder stays within viewport and accessible tabs work', async ({ p
   await expect(page.locator('.app')).toHaveClass(/theme-ocean/);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
   expect(overflow).toBe(false);
+});
+
+test('JSON backups restore content and theme', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Restore a PortfolioVerse JSON backup').setInputFiles({ name: 'portfolioverse-draft.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ portfolio: { name: 'Taylor Chen', role: 'Artist', bio: 'I draw.', email: '', skills: ['Drawing'], projects: [] }, theme: 'forest' })) });
+  await expect(page.getByLabel('Full name')).toHaveValue('Taylor Chen');
+  await expect(page.locator('.app')).toHaveClass(/theme-forest/);
+});
+
+test('responsive landing and editor visual captures', async ({ page }, testInfo) => {
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto('/');
+    await expect(page.locator('canvas[data-rendered="true"]')).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath(`landing-${width}.png`), fullPage: true });
+    await page.getByRole('button', { name: 'Explore a sample', exact: true }).click();
+    await expect(page.getByLabel('Full name')).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath(`editor-${width}.png`), fullPage: true });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  }
 });

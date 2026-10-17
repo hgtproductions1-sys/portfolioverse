@@ -139,6 +139,15 @@ function App() {
     const request = ++importRef.current;
     setBusy(true); setError(''); setMessage('Reading your resume locally…');
     try {
+      if (/\.json$/i.test(file.name)) {
+        if (file.size > 8 * 1024 * 1024) throw new Error('Choose a JSON backup smaller than 8 MB.');
+        const backup = JSON.parse(await file.text());
+        if (!backup.portfolio || !Array.isArray(backup.portfolio.projects)) throw new Error('This is not a PortfolioVerse backup. Choose the JSON file downloaded from the studio.');
+        loadPortfolio(backup.portfolio, 'JSON backup restored. Save draft to keep it in this browser.');
+        if (themes.some(item => item.id === backup.theme)) setTheme(backup.theme);
+        setFilename(file.name); setSourceText('');
+        return;
+      }
       const text = await extractDocument(file);
       const next = parseResume(text);
       if (request !== importRef.current) return;
@@ -234,6 +243,8 @@ function App() {
             <div className="segmented" role="group" aria-label="Resume input method"><button aria-pressed={sourceMode === 'file'} onClick={() => setSourceMode('file')}>Upload a file</button><button aria-pressed={sourceMode === 'text'} onClick={() => setSourceMode('text')}>Paste text</button></div>
             {sourceMode === 'file' ? <><input ref={fileInput} className="sr-only" type="file" id="resume-file" accept=".pdf,.txt,.md,text/plain,application/pdf" onChange={event => importFile(event.target.files?.[0])} disabled={busy} /><div className={`drop-zone ${dragging ? 'is-dragging' : ''} ${busy ? 'is-busy' : ''}`} onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true); }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }} onDrop={event => { event.preventDefault(); setDragging(false); importFile(event.dataTransfer.files[0]); }}><span className={`upload-symbol ${busy ? 'loading' : ''}`}><Icon name="upload" size={27} /></span><strong>{busy ? 'Reading your resume…' : dragging ? 'Drop it here' : 'Drop your resume here'}</strong><span>{busy ? 'Extracting on your device' : 'PDF or text · Text-based PDFs work best'}</span><button className="button secondary" onClick={() => fileInput.current?.click()} disabled={busy}>{busy ? 'Reading file' : 'Choose a file'}{!busy && <Icon name="plus" size={16} />}</button></div>{filename && <p className="file-caption"><Icon name="file" size={14} /><span>{filename}</span></p>}</> : <div className="paste-input"><label htmlFor="resume-text">Resume text</label><textarea id="resume-text" placeholder={'Your name\nYour role\n\nExperience, projects, skills…'} value={sourceText} onChange={event => setSourceText(event.target.value)} rows={9} /><button className="button primary" onClick={importText} disabled={busy || !sourceText.trim()}>Create my draft <Icon name="arrow" size={16} /></button><span className="field-hint">{sourceText.length.toLocaleString()} characters · Kept in memory only</span></div>}
             <div className="sample-option"><span>Just looking around?</span><button className="text-link" onClick={loadSample} disabled={busy}>Try the sample portfolio <Icon name="arrow" size={15} /></button></div>
+            <label className="field-hint" htmlFor="restore-backup">Restore a PortfolioVerse JSON backup</label>
+            <input id="restore-backup" type="file" accept=".json,application/json" disabled={busy} onChange={event => { importFile(event.target.files?.[0]); event.target.value = ''; }} />
             <p className="privacy-note"><svg width="15" height="17" viewBox="0 0 20 22" fill="none" aria-hidden="true"><path d="m10 1 8 3v7c0 5-8 10-8 10S2 16 2 11V4l8-3Z" stroke="currentColor" strokeWidth="1.4" /><path d="m6 10 3 3 5-5" stroke="currentColor" strokeWidth="1.4" /></svg><span>Your resume stays in memory. Nothing is stored until you choose <strong>Save draft</strong>. Only the edited draft is saved to this browser.</span></p>
           </aside>
 

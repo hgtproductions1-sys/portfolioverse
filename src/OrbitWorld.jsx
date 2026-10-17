@@ -14,7 +14,7 @@ export default function OrbitWorld({ portfolio, theme = 'ember', selectedId, onS
   useEffect(() => {
     const element = host.current;
     let renderer;
-    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); }
     catch { setUnavailable(true); return; }
     setUnavailable(false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -90,6 +90,7 @@ export default function OrbitWorld({ portfolio, theme = 'ember', selectedId, onS
       controls.update();
       nodes.forEach(node => { node.scale.setScalar(selected.current === node.userData.id ? 1.5 : 1); });
       renderer.render(scene, camera);
+      renderer.domElement.dataset.rendered = 'true';
     }
     render();
     return () => {
