@@ -36,7 +36,7 @@ function readSaved() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const saved = JSON.parse(raw);
-     return { portfolio: normalize(saved.portfolio), theme: themes.some(item => item.id === saved.theme) ? saved.theme : 'ember', template: templates.some(item => item.id === saved.template) ? saved.template : 'orbit', savedAt: saved.savedAt };
+     return { portfolio: normalize(saved.portfolio), theme: themes.some(item => item.id === saved.theme) ? saved.theme : 'ember', template: templates.some(item => item.id === saved.template) ? saved.template : 'editorial', savedAt: saved.savedAt };
   } catch {
     return { restoreError: 'Your saved draft could not be restored. You can import a resume or start with the sample.' };
   }
@@ -111,8 +111,8 @@ function App() {
   const [initial] = useState(readSaved);
   const [portfolio, setPortfolio] = useState(initial.portfolio || null);
   const [theme, setTheme] = useState(initial.theme || 'ember');
-  const [template, setTemplate] = useState(initial.template || 'orbit');
-  const [savedSnapshot, setSavedSnapshot] = useState(initial.portfolio ? JSON.stringify({ portfolio: initial.portfolio, theme: initial.theme, template: initial.template || 'orbit' }) : '');
+  const [template, setTemplate] = useState(initial.template || 'editorial');
+  const [savedSnapshot, setSavedSnapshot] = useState(initial.portfolio ? JSON.stringify({ portfolio: initial.portfolio, theme: initial.theme, template: initial.template || 'editorial' }) : '');
   const [savedAt, setSavedAt] = useState(initial.savedAt || null);
   const [sourceText, setSourceText] = useState('');
   const [sourceMode, setSourceMode] = useState('file');

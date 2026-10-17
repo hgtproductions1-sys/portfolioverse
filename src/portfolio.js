@@ -1,14 +1,14 @@
 /** Fictional demo content. Replace these details with your own before publishing. */
 export const samplePortfolio = {
   name: 'Alex Morgan',
-  role: 'Product designer',
-  bio: 'Fictional sample portfolio: Alex explores clear interfaces and thoughtful digital experiences. These projects are illustrative, not real client work.',
+  role: 'Designer of clear, useful digital worlds',
+  bio: 'Alex Morgan is a fictional product designer interested in the space between a complicated system and the person trying to use it. This sample is illustrative, but the work is shaped around a real design practice: notice the friction, find the signal, make the next step feel obvious.',
   email: 'alex@example.com',
-  skills: ['Interface design', 'Prototyping', 'Design systems'],
+  skills: ['Product thinking', 'Interface design', 'Prototyping', 'Design systems'],
   projects: [
-    { id: 'project-1', title: 'Reading Room', description: 'Fictional concept for organizing a personal reading list.', url: '' },
-    { id: 'project-2', title: 'Field Notes', description: 'Fictional concept for collecting observations on neighborhood walks.', url: '' },
-    { id: 'project-3', title: 'Small Hours', description: 'Fictional exploration of a simple daily planning interface.', url: '' },
+    { id: 'project-1', title: 'The Reading Room', description: 'A fictional library interface that turns an unread list into a calmer ritual. The work focuses on discovery, pacing, and the small decisions that make returning to a book feel easy.', url: '' },
+    { id: 'project-2', title: 'Field Notes for a Living City', description: 'A fictional civic field guide for collecting observations on neighborhood walks. The concept makes local knowledge feel lightweight, useful, and worth passing on.', url: '' },
+    { id: 'project-3', title: 'Small Hours', description: 'A fictional planning tool for people whose best work happens in fragments. The system gives unfinished ideas a place to wait without turning life into a checklist.', url: '' },
   ],
 };
 
@@ -125,9 +125,9 @@ export function refinePortfolio(portfolio, tone = 'professional') {
 export function exportPortfolio(portfolio, theme = 'ember', template = 'orbit') {
   const data = portfolio || {};
   const palettes = {
-    ember: ['#141413', '#eeeee8', '#ffad79'],
-    ocean: ['#12191d', '#eeeee8', '#9bdfea'],
-    forest: ['#141b16', '#eeeee8', '#a8d5a2'],
+    ember: ['#f3eee5', '#171713', '#d65b36'],
+    ocean: ['#eef4f2', '#14201f', '#197a78'],
+    forest: ['#eef0e5', '#172016', '#56733b'],
     cosmic: ['#111018', '#f6f0e9', '#c5a7ff'],
     midnight: ['#0b1324', '#edf3ff', '#99c8ff'],
     aurora: ['#081e20', '#ecfff4', '#9de7bb'],

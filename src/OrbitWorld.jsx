@@ -54,7 +54,7 @@ export default function OrbitWorld({ portfolio, theme = 'ember', selectedId, onS
       const labelCanvas = document.createElement('canvas');
       labelCanvas.width = 640; labelCanvas.height = 96;
       const ctx = labelCanvas.getContext('2d');
-      ctx.font = '500 30px system-ui'; ctx.fillStyle = '#edece7'; ctx.textAlign = 'center';
+      ctx.font = '500 30px system-ui'; ctx.fillStyle = theme === 'ember' ? '#2b2620' : '#edece7'; ctx.textAlign = 'center';
       ctx.fillText((project.title || 'Untitled project').slice(0, 28), 320, 60);
       const texture = new THREE.CanvasTexture(labelCanvas);
       const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false, transparent: true }));
